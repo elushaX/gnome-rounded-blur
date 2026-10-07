@@ -21,8 +21,21 @@ libdir = join_paths(prefix, get_option('libdir'))
 includedir = join_paths(prefix, get_option('includedir'))
 datadir = join_paths(prefix, get_option('datadir'))
 
-mutter_api_version = '18'
 mutter_req = '>= 50.0'
+
+# The mutter API version matches the GNOME major version (e.g. 50, 51, ...)
+# and bumps every release, so detect the installed one instead of hardcoding.
+mutter_api_version = ''
+foreach version : ['52', '51', '50']
+  if dependency('libmutter-' + version, required: false).found()
+    mutter_api_version = version
+    break
+  endif
+endforeach
+
+if mutter_api_version == ''
+  error('No supported libmutter (>= 50) found')
+endif
 
 clutter_pc = 'mutter-clutter-' + mutter_api_version
 cogl_pc = 'mutter-cogl-' + mutter_api_version
@@ -37,7 +50,7 @@ clutter_dep = dependency(clutter_pc, version: mutter_req,
 cogl_dep = dependency(cogl_pc, version: mutter_req,
   required: false,
 )
-libmutter_dep = dependency('libmutter-18')
+libmutter_dep = dependency('libmutter-' + mutter_api_version)
 
 # Required dependencies
 deps = [
